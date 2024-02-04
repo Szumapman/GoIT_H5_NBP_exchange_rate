@@ -131,3 +131,37 @@ def data_adapter(data: tuple) -> list:
     if errors:
         return [dates, errors]
     return [dates]
+
+
+def pretty_view(data: list) -> str:
+    """
+    Function to set format data in the way suitable for the web page.
+
+    :param data: list in the format returned from data_adapter function.
+    :return: string formatted in the way suitable for the web page.
+    """
+    # Set the format of the string
+    pattern = "|{:^14}|{:^10}|{:^10}|{:^10}|"
+    formatted_string = "exchange rates: "
+    error_info = ""
+    for date_dict in data:
+        # If the data is list it means that there are errors. So, we need to add the error info to the string.
+        if isinstance(date_dict, list):
+            error_info += f"{CURRENCY_ERROR.upper()} "
+            wrong_args = []
+            for info in date_dict:
+                wrong_args.append(f"{info[CURRENCY_ERROR]}")
+            error_info += ", ".join(wrong_args) + "\n"
+            continue
+        currencies_info = []
+        for date, currencies in date_dict.items():
+            formatted_string += f"DATE: {date} - "
+            for currency, values in currencies.items():
+                currency = currency.upper()
+                buy = values["purchase"]
+                sale = values["sale"]
+                currencies_info.append(f"{currency}: sale: {buy} | sale: {sale}")
+            formatted_string += " || ".join(currencies_info) + " <<>> "
+    if error_info:
+        return formatted_string + "\n" + error_info
+    return formatted_string
