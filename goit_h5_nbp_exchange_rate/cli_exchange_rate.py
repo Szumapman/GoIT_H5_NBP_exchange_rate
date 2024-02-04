@@ -4,9 +4,11 @@ import asyncio
 
 from utilities.nbp_exchange_rate_tools import get_args, get_data_from_nbp, data_adapter
 
+"""
+Script that gets the exchange rates from NBP API and prints them in the format according to the homework requirements.
+"""
 
 if __name__ == "__main__":
-    """ """
     # Get the range of days and currencies according to the arguments passed to the script.
     range_of_days, currencies = get_args(sys.argv[1:])
     # Set the event loop policy on Windows, to avoid error: "RuntimeError: Event loop is closed."
