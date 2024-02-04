@@ -120,6 +120,8 @@ def data_adapter(data: tuple) -> list:
                 else dates[rate["effectiveDate"]]
                 | {item["code"]: {"sale": rate["ask"], "purchase": rate["bid"]}}
             )
+    # If there are errors, return the data formatted in the way required for the homework and errors.
+    # Returning errors is not a part of the homework, so to skip it, just comment out the if statement below.
     if errors:
         return [dates, errors]
     return [dates]
