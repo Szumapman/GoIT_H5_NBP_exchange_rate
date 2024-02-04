@@ -31,8 +31,9 @@ logger.addHandler(fh)
 
 class Server:
     """
-    Websocket server class from lecture (the only change is in distribute method).
+    Websocket server class from lecture (the only change is in distribute method + added method _set_exchange_message).
     """
+
     clients = set()
 
     async def register(self, ws: WebSocketServerProtocol):
@@ -57,16 +58,25 @@ class Server:
         finally:
             await self.unregister(ws)
 
+    @staticmethod
+    async def _set_exchange_message(message: str) -> str:
+        """
+        Create message with the exchange data.
+        :param message: message starting with exchange to process
+        :return: string with exchange data formatted to show on website
+        """
+        range_of_days, currencies = get_args(message.split()[1:])
+        data_from_nbp = await get_data_from_nbp(range_of_days, currencies)
+        message = data_adapter(data_from_nbp)
+        return pretty_view(message)
+
     async def distribute(self, ws: WebSocketServerProtocol):
         async for message in ws:
             # Check if the message is an exchange request.
             if message.split()[0].lower() == "exchange":
                 await exchange_logging(ws.name, message)
                 # Create message with the exchange data.
-                range_of_days, currencies = get_args(message.split()[1:])
-                data_from_nbp = await get_data_from_nbp(range_of_days, currencies)
-                message = data_adapter(data_from_nbp)
-                message = pretty_view(message)
+                message = await self._set_exchange_message(message)
             await self.send_to_clients(f"{ws.name}: {message}")
 
 
