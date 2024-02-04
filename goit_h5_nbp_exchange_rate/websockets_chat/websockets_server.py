@@ -66,7 +66,7 @@ class Server:
             await self.send_to_clients(f"{ws.name}: {message}")
 
 
-async def set_exchange_logging_directory():
+async def _set_exchange_logging_directory():
     app_dir = await aiopath.Path(__file__).parent.absolute()
     logging_directory = app_dir.joinpath("exchange_logging")
     if not await logging_directory.exists():
@@ -75,8 +75,8 @@ async def set_exchange_logging_directory():
 
 
 async def exchange_logging(user_name: str, command: str):
-    logging_directory = await set_exchange_logging_directory()
-    log_file = logging_directory.joinpath("exchange.txt")
+    logging_directory = await _set_exchange_logging_directory()
+    log_file = logging_directory.joinpath("exchange.log")
     async with aiofile.async_open(log_file, mode="a") as f:
         await f.write(f"{datetime.now()} - {user_name} call command: {command}.\n")
 
