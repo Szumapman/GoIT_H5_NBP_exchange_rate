@@ -1,11 +1,33 @@
 import asyncio
 import logging
+import aiofile
+import aiopath
+from datetime import datetime
+
 import websockets
 import names
 from websockets import WebSocketServerProtocol
 from websockets.exceptions import ConnectionClosedOK
 
-logging.basicConfig(level=logging.INFO)
+from goit_h5_nbp_exchange_rate.utilities.nbp_exchange_rate_tools import (
+    get_args,
+    get_data_from_nbp,
+    data_adapter,
+    pretty_view,
+)
+
+
+# Create a logger with the name "server" and set its level to DEBUG.
+logger = logging.getLogger("server")
+logger.setLevel(logging.DEBUG)
+# Set the following logging configuration:
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+# Create a file handler set its level to INFO and add the formatter to it.
+fh = logging.FileHandler("server.log")
+fh.setLevel(logging.INFO)
+fh.setFormatter(formatter)
+# Add the file handler to the logger.
+logger.addHandler(fh)
 
 
 class Server:
@@ -14,11 +36,11 @@ class Server:
     async def register(self, ws: WebSocketServerProtocol):
         ws.name = names.get_full_name()
         self.clients.add(ws)
-        logging.info(f"{ws.remote_address} connects")
+        logger.info(f"{ws.remote_address} connects")
 
     async def unregister(self, ws: WebSocketServerProtocol):
         self.clients.remove(ws)
-        logging.info(f"{ws.remote_address} disconnects")
+        logger.info(f"{ws.remote_address} disconnects")
 
     async def send_to_clients(self, message: str):
         if self.clients:
@@ -27,16 +49,36 @@ class Server:
     async def ws_handler(self, ws: WebSocketServerProtocol):
         await self.register(ws)
         try:
-            await self.distrubute(ws)
+            await self.distribute(ws)
         except ConnectionClosedOK:
             pass
         finally:
             await self.unregister(ws)
 
-    async def distrubute(self, ws: WebSocketServerProtocol):
+    async def distribute(self, ws: WebSocketServerProtocol):
         async for message in ws:
-            logging.info(f"{ws.remote_address} says: {message}")
+            if message.split()[0].lower() == "exchange":
+                await exchange_logging(ws.name, message)
+                range_of_days, currencies = get_args(message.split()[1:])
+                data_from_nbp = await get_data_from_nbp(range_of_days, currencies)
+                message = data_adapter(data_from_nbp)
+                message = pretty_view(message)
             await self.send_to_clients(f"{ws.name}: {message}")
+
+
+async def set_exchange_logging_directory():
+    app_dir = await aiopath.Path(__file__).parent.absolute()
+    logging_directory = app_dir.joinpath("exchange_logging")
+    if not await logging_directory.exists():
+        await aiopath.Path.mkdir(logging_directory)
+    return logging_directory
+
+
+async def exchange_logging(user_name: str, command: str):
+    logging_directory = await set_exchange_logging_directory()
+    log_file = logging_directory.joinpath("exchange.txt")
+    async with aiofile.async_open(log_file, mode="a") as f:
+        await f.write(f"{datetime.now()} - {user_name} call command: {command}.\n")
 
 
 async def main():
