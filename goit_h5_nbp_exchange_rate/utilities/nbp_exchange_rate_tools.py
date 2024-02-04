@@ -76,17 +76,23 @@ async def get_data_from_nbp(range_of_days, currencies: list):
 
 def get_args(arguments):
     """
-    It takes a range of days and currencies according to the arguments passed to the script and returns them
-    considering the requirements imposed in the homework.
+    Functon to set range of days and currencies to get data from NBP API,
+    based on the passed arguments and default values.
+
+    :param arguments: tuple of strings representing the arguments passed from the command line.
+    :return: tuple of two elements: range of days and list of currencies.
     """
     currencies = ["usd", "eur"]
     range_of_days = 1
-    arguments = [arg.lower() for arg in arguments]
     if len(arguments) == 0:
         return range_of_days, currencies
+    arguments = [arg.lower() for arg in arguments]
+    # If the first argument is a number, set range of days to the passed number,
     if arguments[0].lstrip("-").isdecimal():
+        # if it is in the range 0-10: return it.
         if 0 < int(arguments[0]) <= 10:
             range_of_days = int(arguments[0])
+        # If it is bigger than 10, set it to 10. If it is lower than 1, return 1 (default value).
         elif int(arguments[0]) > 10:
             range_of_days = 10
         currencies += arguments[1:]
