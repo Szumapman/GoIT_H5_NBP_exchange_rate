@@ -140,8 +140,6 @@ def pretty_view(data: list) -> str:
     :param data: list in the format returned from data_adapter function.
     :return: string formatted in the way suitable for the web page.
     """
-    # Set the format of the string
-    pattern = "|{:^14}|{:^10}|{:^10}|{:^10}|"
     formatted_string = "exchange rates: "
     error_info = ""
     for date_dict in data:
