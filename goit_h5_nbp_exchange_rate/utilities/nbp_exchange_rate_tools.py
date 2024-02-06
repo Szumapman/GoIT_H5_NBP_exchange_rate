@@ -1,6 +1,6 @@
 import asyncio
 import logging
-
+from http import HTTPStatus
 import aiohttp
 
 
@@ -39,7 +39,7 @@ async def _get_exchange_rate_from_nbp(currency, range_of_days, session):
     # Get the data from NBP API with exception handling.
     try:
         async with session.get(url) as response:
-            if response.status == 200:
+            if response.status == HTTPStatus.OK:
                 result = await response.json()
                 return result
             else:
